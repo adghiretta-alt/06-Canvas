@@ -283,7 +283,11 @@ En aquest exemple, es veu com fer una animació simple amb el timer.
 </center>
 <br/>
 
+<<<<<<< HEAD
 ## Exemple 0606 - Tanks
+=======
+## Exemple 0605
+>>>>>>> 80f90ee533d406c77e98e34fb64a40bb0b03b531
 
 Aquest exemple és una base mínima per al joc de **Tanks**: un únic *Canvas* amb parets, dos obstacles escollits aleatòriament d'una llista predefinida i dos tancs dibuixats amb formes simples.
 
@@ -293,6 +297,7 @@ Aquest exemple és una base mínima per al joc de **Tanks**: un únic *Canvas* a
 - El segon tanc és un objectiu immòbil: quan rep una bala, desapareix amb una petita animació d'explosió. Les bales també poden destruir el tanc del jugador després de rebotar.
 - La tecla **R** reinicia l'exemple i torna a escollir els dos obstacles.
 
+<<<<<<< HEAD
 Com al 0604, el controlador separa la lògica (`update`) del dibuix (`redraw`) i fa servir `CnvTimer`. La variable `dt` indica el temps transcorregut entre actualitzacions. `update()` mou els objectes i orienta la torreta; `redraw()` representa l'estat del joc.
 
 ### Objectes i moviment
@@ -356,6 +361,9 @@ for (int step = 0; step < PHYSICS_PRECISION; step++) {
 ```
 
 **NOTA:** Això evita que dos moviments ràpids "se saltin" sense detectar el xoc, normalment això es fa amb matemàtiques més precises però així és més senzill i funciona prou bé per aquest joc.
+=======
+Com al 0604, el controlador separa la lògica (`update`) del dibuix (`redraw`) i fa servir `CnvTimer`. El moviment es calcula amb el temps transcorregut entre fotogrames. Les col·lisions es comproven amb cercles i rectangles; les bales avancen en passos petits per no saltar obstacles.
+>>>>>>> 80f90ee533d406c77e98e34fb64a40bb0b03b531
 
 Per executar-lo des de la carpeta de l'exemple:
 
