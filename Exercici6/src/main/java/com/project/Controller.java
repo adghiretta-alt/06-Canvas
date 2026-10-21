@@ -60,33 +60,33 @@ public class Controller implements Initializable {
         gc.setLineCap(StrokeLineCap.ROUND);
         gc.setLineJoin(StrokeLineJoin.ROUND);
 
-        if (widthSpinner != null) {
-            widthSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(1.0, 50.0, 2.0, 1.0));
-        }
+        // Spinner d'ample
+        widthSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(1.0, 50.0, 2.0, 1.0));
 
-        if (objectsListView != null) {
-            objectsListView.setItems(strokes);
-            objectsListView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-                if (deleteButton != null) deleteButton.setDisable(newVal == null);
-                redraw();
-            });
-        }
+        // ColorPickers inicials
+        strokeColorPicker.setValue(Color.BLACK);
+        fillColorPicker.setValue(Color.TRANSPARENT);
 
-        if (toolGroup != null) {
-            toolGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
-                if (objectsListView != null) objectsListView.getSelectionModel().clearSelection();
-                redraw();
-            });
-        }
-
+        // Paleta
         colorPalette = new ColorPalette(colorsCanvas);
+        strokeColorPicker.valueProperty().addListener((obs, oldVal, newVal) -> {
+            colorPalette.setSelectedColor(newVal);
+        });
 
-        if (strokeColorPicker != null) {
-            strokeColorPicker.valueProperty().addListener((obs, oldVal, newVal) -> {
-                colorPalette.setSelectedColor(newVal);
-            });
-        }
+        // Llista d'objectes
+        objectsListView.setItems(strokes);
+        objectsListView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            deleteButton.setDisable(newVal == null);
+            redraw();
+        });
 
+        // Al canviar d'eina, desmarquem l'objecte seleccionat
+        toolGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+            objectsListView.getSelectionModel().clearSelection();
+            redraw();
+        });
+
+        // Esdeveniments del Canvas
         canvas.setOnMousePressed(this::onMousePressed);
         canvas.setOnMouseDragged(this::onMouseDragged);
         canvas.setOnMouseReleased(this::onMouseReleased);
@@ -95,25 +95,24 @@ public class Controller implements Initializable {
     }
 
     private double getSelectedWidth() {
-        return (widthSpinner != null && widthSpinner.getValue() != null) ? widthSpinner.getValue() : 2.0;
+        return widthSpinner.getValue() != null ? widthSpinner.getValue() : 2.0;
     }
 
     private Color getStrokeColor() {
-        return (strokeColorPicker != null && strokeColorPicker.getValue() != null) 
-            ? strokeColorPicker.getValue() : colorPalette.getSelectedColor();
+        return strokeColorPicker.getValue() != null ? strokeColorPicker.getValue() : colorPalette.getSelectedColor();
     }
 
     private Color getFillColor() {
-        return (fillColorPicker != null) ? fillColorPicker.getValue() : Color.TRANSPARENT;
+        return fillColorPicker.getValue();
     }
 
     private void onMousePressed(MouseEvent event) {
         if (event.getButton() != MouseButton.PRIMARY) return;
 
         Point2D mousePos = new Point2D(event.getX(), event.getY());
-        Stroke selectedStroke = (objectsListView != null) ? objectsListView.getSelectionModel().getSelectedItem() : null;
+        Stroke selectedStroke = objectsListView.getSelectionModel().getSelectedItem();
 
-        // Mode Moure: si cliquem dins del requadre delimitador de l'objecte seleccionat
+        // Si hi ha un objecte seleccionat i cliquem dins del seu requadre -> Mode Moure
         if (selectedStroke != null) {
             Bounds bounds = selectedStroke.getBoundingBox();
             if (bounds.contains(mousePos)) {
@@ -123,15 +122,15 @@ public class Controller implements Initializable {
             }
         }
 
-        // Mode Dibuix: desmarquem la selecció actual i comencem un objecte nou
+        // Mode Dibuix nou
         isDraggingObject = false;
-        if (objectsListView != null) objectsListView.getSelectionModel().clearSelection();
+        objectsListView.getSelectionModel().clearSelection();
 
-        if (lineRadio != null && lineRadio.isSelected()) {
+        if (lineRadio.isSelected()) {
             currentStroke = new Stroke(Stroke.Type.LINE, "Línia " + (lineCount++), getStrokeColor(), null, getSelectedWidth());
             currentStroke.addPoint(mousePos.getX(), mousePos.getY());
             currentStroke.addPoint(mousePos.getX(), mousePos.getY());
-        } else if (rectRadio != null && rectRadio.isSelected()) {
+        } else if (rectRadio.isSelected()) {
             currentStroke = new Stroke(Stroke.Type.RECTANGLE, "Rectangle " + (rectCount++), getStrokeColor(), getFillColor(), getSelectedWidth());
             currentStroke.addPoint(mousePos.getX(), mousePos.getY());
             currentStroke.addPoint(mousePos.getX(), mousePos.getY());
@@ -160,8 +159,8 @@ public class Controller implements Initializable {
 
         if (currentStroke == null) return;
 
-        if ((lineRadio != null && lineRadio.isSelected()) || (rectRadio != null && rectRadio.isSelected())) {
-            currentStroke.setLastPoint(mousePos.getX(), mousePos.getY());
+        if (lineRadio.isSelected() || rectRadio.isSelected()) {
+            currentStroke.updateLastPoint(mousePos.getX(), mousePos.getY());
         } else {
             currentStroke.addPoint(mousePos.getX(), mousePos.getY());
         }
@@ -185,7 +184,6 @@ public class Controller implements Initializable {
 
     @FXML
     private void onDeleteSelected() {
-        if (objectsListView == null) return;
         Stroke selected = objectsListView.getSelectionModel().getSelectedItem();
         if (selected != null) {
             strokes.remove(selected);
@@ -198,28 +196,26 @@ public class Controller implements Initializable {
         gc.setFill(Color.WHITE);
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
-        // Dibuixa els objectes en ordre de creació
+        // Dibuixar objectes desats
         for (Stroke s : strokes) {
             s.draw(gc);
         }
 
-        // Previsualització de l'objecte que s'està dibuixant
+        // Dibuixar previsualització
         if (currentStroke != null) {
             currentStroke.draw(gc);
         }
 
-        // Requadre discontinu de selecció
-        if (objectsListView != null) {
-            Stroke selected = objectsListView.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                Bounds b = selected.getBoundingBox();
-                gc.save();
-                gc.setStroke(Color.BLUE);
-                gc.setLineWidth(1.5);
-                gc.setLineDashes(6.0, 4.0);
-                gc.strokeRect(b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight());
-                gc.restore();
-            }
+        // Dibuixar requadre discontinu sobre l'objecte seleccionat
+        Stroke selected = objectsListView.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            Bounds b = selected.getBoundingBox();
+            gc.save();
+            gc.setStroke(Color.BLUE);
+            gc.setLineWidth(1.5);
+            gc.setLineDashes(6.0, 4.0);
+            gc.strokeRect(b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight());
+            gc.restore();
         }
     }
 }

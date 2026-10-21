@@ -32,7 +32,7 @@ public class Stroke {
         points.add(new Point2D(x, y));
     }
 
-    public void setLastPoint(double x, double y) {
+    public void updateLastPoint(double x, double y) {
         if (!points.isEmpty()) {
             points.set(points.size() - 1, new Point2D(x, y));
         }
@@ -76,7 +76,7 @@ public class Stroke {
         }
     }
 
-    // Calcula el requadre delimitador incloent el marge de l'ample de línia
+    // Calcula el requadre delimitador amb marge
     public Bounds getBoundingBox() {
         if (points.isEmpty()) return new BoundingBox(0, 0, 0, 0);
 
@@ -99,7 +99,7 @@ public class Stroke {
         );
     }
 
-    // Trasllada tots els punts de l'objecte sense deformar-lo
+    // Trasllada l'objecte complet quan el movem
     public void translate(double deltaX, double deltaY) {
         for (int i = 0; i < points.size(); i++) {
             Point2D p = points.get(i);

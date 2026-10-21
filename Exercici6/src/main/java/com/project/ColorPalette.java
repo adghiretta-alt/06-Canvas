@@ -7,9 +7,16 @@ import javafx.scene.paint.Color;
 
 public class ColorPalette {
 
-    private static final Color[] COLORS = { Color.BLACK, Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.ORANGE, Color.PURPLE };
-    private static final double RADIUS = 14;
-    private static final double SPACING = 35;
+    // Llista de colors principals
+    private static final Color[] COLORS = {
+        Color.BLACK, Color.RED, Color.ORANGE, Color.YELLOW, 
+        Color.GREEN, Color.CYAN, Color.BLUE, Color.PURPLE
+    };
+
+    private static final double PENCIL_WIDTH = 16;
+    private static final double BODY_HEIGHT = 45;
+    private static final double TIP_HEIGHT = 15;
+    private static final double SPACING = 20;
 
     private final Canvas canvas;
     private final GraphicsContext gc;
@@ -32,25 +39,31 @@ public class ColorPalette {
         draw();
     }
 
-    private double getCenterX(int index) {
-        return SPACING / 2 + index * SPACING + 10;
+    private double getPencilX(int index) {
+        return 5 + index * SPACING;
     }
 
-    private double getCenterY(int index) {
-        double baseCenterY = canvas.getHeight() / 2 + 5;
-        // Si el color està seleccionat, es dibuixa més amunt verticalment
+    private double getPencilY(int index) {
+        double baseY = canvas.getHeight() - BODY_HEIGHT - TIP_HEIGHT - 5;
+        // Si és el color seleccionat, s'eleva cap amunt
         if (COLORS[index].equals(selectedColor)) {
-            return baseCenterY - 10;
+            return baseY - 15;
         }
-        return baseCenterY;
+        return baseY;
     }
 
     private void onMouseClicked(MouseEvent event) {
-        for (int i = 0; i < COLORS.length; i++) {
-            double dx = event.getX() - getCenterX(i);
-            double dy = event.getY() - getCenterY(i);
+        double clickX = event.getX();
+        double clickY = event.getY();
 
-            if (Math.sqrt(dx * dx + dy * dy) <= RADIUS) {
+        for (int i = 0; i < COLORS.length; i++) {
+            double px = getPencilX(i);
+            double py = getPencilY(i);
+            double totalHeight = BODY_HEIGHT + TIP_HEIGHT;
+
+            // Comprovar si el clic cau dins de l'àrea del llapis
+            if (clickX >= px && clickX <= px + PENCIL_WIDTH &&
+                clickY >= py && clickY <= py + totalHeight) {
                 selectedColor = COLORS[i];
                 draw();
                 return;
@@ -61,23 +74,42 @@ public class ColorPalette {
     public void draw() {
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
+        Color woodColor = Color.web("#d7a15c"); // Color fusta de la punta
+
         for (int i = 0; i < COLORS.length; i++) {
-            double cx = getCenterX(i);
-            double cy = getCenterY(i);
+            double x = getPencilX(i);
+            double y = getPencilY(i);
+            Color color = COLORS[i];
 
-            gc.setFill(COLORS[i]);
-            gc.fillOval(cx - RADIUS, cy - RADIUS, RADIUS * 2, RADIUS * 2);
+            // 1. Punta de fusta (triangle)
+            gc.setFill(woodColor);
+            gc.fillPolygon(
+                new double[]{ x, x + PENCIL_WIDTH / 2.0, x + PENCIL_WIDTH },
+                new double[]{ y + TIP_HEIGHT, y, y + TIP_HEIGHT },
+                3
+            );
 
-            gc.setStroke(Color.GRAY);
+            // 2. Mina del llapis (triangle petit superior)
+            gc.setFill(color);
+            gc.fillPolygon(
+                new double[]{ x + 4, x + PENCIL_WIDTH / 2.0, x + PENCIL_WIDTH - 4 },
+                new double[]{ y + TIP_HEIGHT - 4, y, y + TIP_HEIGHT - 4 },
+                3
+            );
+
+            // 3. Cos del llapis (rectangle de color)
+            gc.setFill(color);
+            gc.fillRect(x, y + TIP_HEIGHT, PENCIL_WIDTH, BODY_HEIGHT);
+
+            // Contorn general per definir el llapis
+            gc.setStroke(Color.DARKGRAY);
             gc.setLineWidth(1);
-            gc.strokeOval(cx - RADIUS, cy - RADIUS, RADIUS * 2, RADIUS * 2);
-
-            if (COLORS[i].equals(selectedColor)) {
-                double r = RADIUS + 3;
-                gc.setStroke(Color.BLACK);
-                gc.setLineWidth(2);
-                gc.strokeOval(cx - r, cy - r, r * 2, r * 2);
-            }
+            gc.strokeRect(x, y + TIP_HEIGHT, PENCIL_WIDTH, BODY_HEIGHT);
+            gc.strokePolygon(
+                new double[]{ x, x + PENCIL_WIDTH / 2.0, x + PENCIL_WIDTH },
+                new double[]{ y + TIP_HEIGHT, y, y + TIP_HEIGHT },
+                3
+            );
         }
     }
 }
